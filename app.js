@@ -1,16 +1,23 @@
 const APIController = (function() {
-    
-    const clientId = "8a845aa67d4348ae98f84d305787b9ac";
-    const clientSecret = "19bee4aa7a894e17b91df7a0e61c5222";
 
     // private methods
-    const _getToken = async () => {
+    const _getClientCredentials = async () => {
+
+        const result = await fetch('./config.json', {
+            method: 'GET',
+        });
+
+        const data = await result.json();
+        return [data.spotify.client_id, data.spotify.client_secret];
+    }
+
+    const _getToken = async (client_id, client_secret) => {
 
         const result = await fetch('https://accounts.spotify.com/api/token', {
             method: 'POST',
             headers: {
                 'Content-Type' : 'application/x-www-form-urlencoded', 
-                'Authorization' : 'Basic ' + btoa(clientId + ':' + clientSecret)
+                'Authorization' : 'Basic ' + btoa(client_id + ':' + client_secret)
             },
             body: 'grant_type=client_credentials'
         });
@@ -84,10 +91,26 @@ const APIController = (function() {
         return data;
     }
 
+    const _getSearch = async (token, query, type) => {
+
+        const result = await fetch(`https://api.spotify.com/v1/search?q=${query}&type=${type}`, {
+            method: 'GET',
+            headers: { 'Authorization' : 'Bearer ' + token},
+        });
+
+        const data = await result.json();
+        console.log("Search Result: ")
+        console.log(data);
+        return data.tracks.items;
+    }
+
 
     return {
-        getToken() {
-            return _getToken();
+        getClientCredentials() {
+            return _getClientCredentials();
+        },
+        getToken(id, secret) {
+            return _getToken(id, secret);
         },
         getCategories(token) {
             return _getCategories(token);
@@ -103,6 +126,9 @@ const APIController = (function() {
         },
         getTrackLyrics(token, id) {
             return _getTrackLyrics(token, id);
+        },
+        getSearch(token, q, type) {
+            return _getSearch(token, q, type);
         }
     }
 })();
@@ -118,6 +144,9 @@ const UIController = (function() {
         selectTracksByPlaylist: '#select_tracks_by_playlist',
         audioTrack: '.audio-track',
         divSongDetail: '#song-detail',
+        selectSearch: '#search',
+        divSonglist: '.song-list',
+        form2: '#form-2',
         hfToken: '#hidden_token',
     }
 
@@ -131,7 +160,10 @@ const UIController = (function() {
                 playlistsbycategory: document.querySelector(DOMElements.selectPlaylistsByCategory),
                 tracksbyplaylist: document.querySelector(DOMElements.selectTracksByPlaylist),
                 audioTrack: document.querySelector(DOMElements.audioTrack),
-                songDetail: document.querySelector(DOMElements.divSongDetail)
+                songDetail: document.querySelector(DOMElements.divSongDetail),
+                searchQuery: document.querySelector(DOMElements.selectSearch),
+                tracksSearchList: document.querySelector(DOMElements.divSonglist),
+                form2: document.querySelector(DOMElements.form2)
             }
         },
 
@@ -190,6 +222,11 @@ const UIController = (function() {
             detailDiv.insertAdjacentHTML('beforeend', html+artistsList+audioHtml);
         },
 
+        createTrackSearch(name, track_id, artist_name) {
+            const html = `<a href="#" class="list-group-item list-group-item-action list-group-item-light" id="${track_id}">${name} - By ${artist_name}</a>`;
+            document.querySelector(DOMElements.divSonglist).insertAdjacentHTML('beforeend', html);
+        },
+
         resetPlaylistsByCategory() {
             this.inputField().playlistsbycategory.innerHTML = `<option>Select...</option>`;
             if(this.inputField().audioTrack)
@@ -199,6 +236,10 @@ const UIController = (function() {
 
         resetTracksByPlaylist() {
             this.inputField().tracksbyplaylist.innerHTML = `<option>Select...</option>`;
+        },
+
+        resetTracksListBySearch() {
+            this.inputField().tracksSearchList.innerHTML = '';
         },
 
         storeToken(value) {
@@ -221,8 +262,10 @@ const APPController = (function(UICtrl, APICtrl) {
 
     // get categories on page load
     const loadCategories = async () => {
+        // get client cred
+        const client_cred = await APICtrl.getClientCredentials();
         //get the token
-        const token = await APICtrl.getToken();           
+        const token = await APICtrl.getToken(client_cred[0],client_cred[1]);
         //store the token onto the page
         UICtrl.storeToken(token);
         //get the categories
@@ -278,7 +321,40 @@ const APPController = (function(UICtrl, APICtrl) {
         // const tracklyrics = await APICtrl.getTrackLyrics(token, trackId);
     
         UICtrl.createTrack(track.id, track.name, track.album.images[0].url, track.artists, track.preview_url, track.duration_ms/1000+1);
+    });
 
+    // create search change event listener
+    DOMInputs.form2.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        //reset the playlist
+        UICtrl.resetTracksListBySearch();
+        //get the token that's stored on the page
+        const token = UICtrl.getStoredToken().token;        
+        // get the track select field
+        const searchSelect = DOMInputs.searchQuery;
+        // get the track id associated with the selected track
+        const search_query = searchSelect.value;
+        // get the track
+        const tracks = await APICtrl.getSearch(token, search_query, "track");
+        console.log(tracks);
+        tracks.forEach( (track) => {
+            if(track.preview_url==null) return;
+            UICtrl.createTrackSearch(track.name, track.id, track.artists[0].name);
+        });
+    });
+
+    // create track_select_from_search click event listener
+    DOMInputs.tracksSearchList.addEventListener('click', async (e) => {
+        //reset the playlist
+        UICtrl.resetPlaylistsByCategory();
+        //get the token that's stored on the page
+        const token = UICtrl.getStoredToken().token;        
+        // get the track id associated with the selected track
+        const trackId = e.target.id;
+        // get the track
+        const track = await APICtrl.getTrack(token, trackId);
+
+        UICtrl.createTrack(track.id, track.name, track.album.images[0].url, track.artists, track.preview_url, track.duration_ms/1000+1);
     });
      
 
