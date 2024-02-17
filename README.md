@@ -1,2 +1,14 @@
 # JavaScript-SpotifyAPI
-This is a sample project showing how to call Spotify's API using vanilla JS
+Play your favourite music with Spotify App.
+
+
+## config.json
+
+```
+{
+  "spotify": {
+    "client_id": "<your_client_id>",
+    "client_secret": "<your_client_secret>"
+  }
+}
+```
