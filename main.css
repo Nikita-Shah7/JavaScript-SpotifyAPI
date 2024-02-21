@@ -1,6 +1,18 @@
-.btn.dropdown-toggle  {
-    width:150px;
-    text-align:left;
+@import url('https://fonts.googleapis.com/css2?family=Protest+Revolution&display=swap');
+
+
+h1 {
+    padding: 0.8rem;
+    text-align: center;
+    font-family: "Protest Revolution", sans-serif;
+    font-weight: 600;
+    font-style: normal;
+    background-color: #4daf64;
+}
+
+.btn.dropdown-toggle {
+    width: 150px;
+    text-align: left;
 }
 
 span.caret {
@@ -23,16 +35,16 @@ span.caret {
 }
 
 img {
-    width:140px;
-    height:140px;
+    width: 140px;
+    height: 140px;
 }
 
 .btn-success {
-    background-color: #3b7d4a!important;
+    background-color: #3b7d4a !important;
 }
 
 .btn-success:hover {
-    background-color: #4daf64!important;
+    background-color: #4daf64 !important;
 }
 
 img.track {
@@ -48,27 +60,28 @@ img.track {
 }
 
 .track-play-details {
-    width: 20rem !important; 
+    width: 20rem !important;
 }
 
 
 
 input[type="search"] {
-  outline: 0;
-  border: 1px solid black;
-  width: 50%;
-  background: #fff;
-  padding: 0 1.6rem;
-  border-radius: 0.7rem;
-  transition: all 0.3s cubic-bezier(0, 0, 0.43, 1.49);
-  transition-property: width, border-radius;
-  z-index: 1;
-  position: relative;
+    outline: 0;
+    border: 1px solid black;
+    width: 50%;
+    background: #fff;
+    padding: 0 1.6rem;
+    border-radius: 0.7rem;
+    transition: all 0.3s cubic-bezier(0, 0, 0.43, 1.49);
+    transition-property: width, border-radius;
+    z-index: 1;
+    position: relative;
 }
+
 button {
-  border: 1px solid black;
-  width: 5rem;
-  font-weight: bold;
-  background: #57bd84;
-  border-radius: 0.7rem;
+    border: 1px solid black;
+    width: 5rem;
+    font-weight: bold;
+    background: #57bd84;
+    border-radius: 0.7rem;
 }
